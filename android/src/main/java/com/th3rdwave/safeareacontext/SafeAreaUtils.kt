@@ -59,6 +59,8 @@ private fun getRootWindowInsetsCompat(rootView: View): EdgeInsets? {
   }
 }
 
+var extraTopSafeAreaInsetProvider: ((View) -> Float)? = null
+
 fun getSafeAreaInsets(view: View): EdgeInsets? {
   // The view has not been layout yet.
   if (view.height == 0) {
@@ -67,13 +69,15 @@ fun getSafeAreaInsets(view: View): EdgeInsets? {
   val rootView = view.rootView
   val windowInsets = getRootWindowInsetsCompat(rootView) ?: return null
 
+  val extraTopInset = extraTopSafeAreaInsetProvider?.invoke(view) ?: 0f
+
   // Calculate the part of the view that overlaps with window insets.
   val windowWidth = rootView.width.toFloat()
   val windowHeight = rootView.height.toFloat()
   val visibleRect = android.graphics.Rect()
   view.getGlobalVisibleRect(visibleRect)
   return EdgeInsets(
-      top = max(windowInsets.top - visibleRect.top, 0f),
+      top = max(windowInsets.top + extraTopInset - visibleRect.top, 0f),
       right = max(min(visibleRect.left + view.width - windowWidth, 0f) + windowInsets.right, 0f),
       bottom = max(min(visibleRect.top + view.height - windowHeight, 0f) + windowInsets.bottom, 0f),
       left = max(windowInsets.left - visibleRect.left, 0f))
